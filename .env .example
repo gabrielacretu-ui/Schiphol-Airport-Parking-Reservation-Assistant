@@ -1,0 +1,21 @@
+OPENAI_API_KEY=sk-proj-....
+GOOGLE_API_KEY=AIza...
+GOOGLE_CSE_ID=e5.....
+
+FASTAPI_KEY=sup....
+MCP_SERVER_URL=http://127.0.0.1:8000
+
+
+TAVILY_API_KEY=tvly-.....
+LANGSMITH_API_KEY=lsv2_.....
+# Enable tracing (v1 and v2)
+LANGSMITH_TRACING=true
+LANGSMITH_TRACING_V2=true
+
+# Optional: project name in LangSmith to organize traces
+LANGSMITH_PROJECT="langchain-academy"
+
+# Optional: custom endpoint (e.g., EU region)
+#LANGSMITH_ENDPOINT=https://eu.api.smith.langchain.com
+LANGCHAIN_ENDPOINT=https://api.smith.langchain.com
+
