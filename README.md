@@ -83,7 +83,7 @@ Follow the steps below **in order**.
 docker-compose up -d
 ```
 
-This command creates the required **Weavia containers** used for semantic data storage.
+This command creates the required **weaviate containers** used for semantic data storage.
 
 ---
 
