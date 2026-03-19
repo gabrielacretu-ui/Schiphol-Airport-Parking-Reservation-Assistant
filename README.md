@@ -43,7 +43,7 @@ You will also need to create your own API keys for:
 ## 1. Clone the Repository
 
 ```bash
-git clone https://github.com/gabrielacretu-ui/Schiphol-Parking-Reservation-Assistant.git
+git clone https://github.com/gabrielacretu-ui/Schiphol-Airport-Parking-Reservation-Assistant.git
 cd Schiphol-Parking-Reservation-Assistant
 ```
 
