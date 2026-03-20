@@ -19,7 +19,7 @@ app = FastAPI()
 # Configuration
 # -------------------------------
 FASTAPI_KEY = os.getenv("FASTAPI_KEY", "supersecret123")  # fallback
-LOG_DIR = "../logs"
+LOG_DIR = "./logs"
 LOG_FILE = "confirmed_reservations_events.txt"
 os.makedirs(LOG_DIR, exist_ok=True)
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
@@ -80,7 +80,6 @@ def save_confirmed_reservation_event(data: dict, x_api_key: str = Header(...)):
     start_time    = data.get("new_start_time") or data.get("start_time")
     end_time      = data.get("new_end_time") or data.get("end_time")
     operation     = f"{data.get('operation', 'unknown')} reservation"
-    op=data.get("operation")
 
 
     # -------------------------------

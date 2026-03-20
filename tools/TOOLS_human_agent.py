@@ -1,4 +1,4 @@
-from functions.FUNCTION_helpers_READ_tools import get_reservations_by_specifics
+from functions.FUNCTION_helpers_READ_tools import get_reservations_by_specifics, get_available_spots
 from INITIALIZATION_sqlite_db import get_sqlite_connection
 from datetime import datetime, timedelta
 from langchain_core.tools import tool
@@ -114,4 +114,74 @@ def check_reservation_length_tool(start_time: str, end_time: str, min_hours: int
     return {
         "status": "approved",
         "message": "Reservation length is valid."
+    }
+from typing import Optional, Any, Dict
+
+# ----------------- TOOL 1: CHECK AVAILABILITY FOR NEW RESERVATION -----------------
+@tool
+def check_available_slots_creation_tool(
+    start_time: str,
+    end_time: str,
+    parking_location: str
+) -> Dict[str, Any]:
+    """
+    Check if parking spots are available before creating a new reservation.
+
+    Call this tool BEFORE confirming a new reservation.
+
+    Args:
+        start_time (str): Start time of the reservation.
+        end_time (str): End time of the reservation.
+        parking_location (str): Desired parking location.
+
+    Returns:
+        dict: status 'approved' or 'refused' and explanatory message.
+    """
+    conn = get_sqlite_connection()
+    res = get_available_spots(conn, parking_location, start_time, end_time)
+
+    if res["available_slots"] == 0:
+        return {
+            "status": "refused",
+            "message": f"No available spots at {parking_location}."
+        }
+
+    return {
+        "status": "approved",
+        "message": f"Spots are available at {parking_location}."
+    }
+
+
+# ----------------- TOOL 2: CHECK AVAILABILITY FOR MODIFYING RESERVATION -----------------
+@tool
+def check_available_slots_modification_tool(
+    new_start_time: str,
+    new_end_time: str,
+    new_parking_location: str
+) -> Dict[str, Any]:
+    """
+    Check if parking spots are available before modifying an existing reservation.
+
+    Call this tool BEFORE confirming changes to an existing reservation.
+
+    Args:
+        new_start_time (str): New start time for the reservation.
+        new_end_time (str): New end time for the reservation.
+        new_parking_location (str): Desired new parking location.
+
+    Returns:
+        dict: status 'approved' or 'refused' and explanatory message.
+    """
+    conn = get_sqlite_connection()
+    res = get_available_spots(conn, new_parking_location, new_start_time, new_end_time)
+
+    if res["available_slots"] == 0:
+        return {
+            "status": "refused",
+            "message": f"No available spots at {new_parking_location}."
+        }
+
+    return {
+        "status": "approved",
+        "message": f"Spots are available at {new_parking_location}. Reservation can be modified."
     }

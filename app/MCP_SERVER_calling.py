@@ -2,7 +2,8 @@ import requests
 import os
 from dotenv import load_dotenv
 
-from functions.FUNCTION_helpers_WRITE_tools import make_reservation_smart, cancel_reservation_interactive
+from functions.FUNCTION_helpers_WRITE_tools import make_reservation_smart, cancel_reservation_interactive, \
+    modify_parking_reservation
 from INITIALIZATION_sqlite_db import get_sqlite_connection
 
 load_dotenv()
@@ -51,6 +52,21 @@ def save_reservation_to_mcp_server(data: dict) -> dict:
         end_time=data.get("end_time"),
         ids=data.get("reservation_ids")
       )
+    elif data.get("operation") == "modifying":
+          modify_parking_reservation(
+            conn,
+            customer_name=data.get("customer_name"),
+            car_number=data.get("car_number"),
+            parking_location=data.get("parking_location"),
+            start_time=data.get("start_time"),
+            end_time=data.get("end_time"),
+            new_customer_name=data.get("new_customer_name"),
+            new_parking_location=data.get("new_parking_location"),
+            new_start_time=data.get("new_start_time"),
+            new_end_time=data.get("new_end_time"),
+            ids=data.get("ids"),
+            new_parking_id=data.get("new_parking_id")
+        )
     conn.commit()
     url = f"{MCP_SERVER_URL}/reservation-events-approved"
     headers = {"x-api-key": FASTAPI_KEY}

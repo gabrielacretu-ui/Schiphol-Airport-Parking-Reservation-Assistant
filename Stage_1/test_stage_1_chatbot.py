@@ -40,7 +40,7 @@ class TestChatbotE2E(unittest.TestCase):
 
     def test_check_and_validate_overlap(self):
             answer = self.ask_chatbot(
-                "Can you help me validate a a new reservation i want to Make for Sanne Dijk for the car number 6XTN30, at Schiphol P3 Long Parking from 2026-04-02 18:00 to 20:00.")
+                "Can you help me validate a a new reservation i want to Make for Jan de Vries for the car number VR295H, at Schiphol P3 Long Parking from 2026-04-01 9:00 to 20:00.")
             self.assertIn("overlap", answer)
 
     def test_parking_info_p1(self):

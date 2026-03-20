@@ -252,4 +252,4 @@ def seed_reservations(conn):
 
 if __name__=="__main__":
     conn=get_sqlite_connection()
-    initialize_db()
+    seed_reservations(conn)

@@ -13,7 +13,8 @@ def agent_admin(admin_tools, admin_memory):
        This function sets up a ChatOpenAI LLM agent that:
        - Reviews reservation-related requests sent by the chatbot agent before any changes are applied to the database.
        - Acts as a human administrator who approves or rejects requests based on system rules, database constraints, and behavioral policies.
-       - Uses provided tools to validate requests, such as checking car reservation history, advance booking limits, and reservation duration.
+       - Uses provided tools to validate requests, such as checking car reservation history, advance booking limits,  reservation duration and
+       if there are any spots available to make a reservation or to change a reservation.
 
        Parameters:
            admin_tools (list): List of administrative tools the agent can call to validate requests.

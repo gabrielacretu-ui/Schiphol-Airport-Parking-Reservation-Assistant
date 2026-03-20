@@ -128,10 +128,10 @@ def make_reservation_smart(conn, customer_name, car_number, location, start_time
 def validate_cancel_reservation_interactive(
     conn,
     car_number,
-    customer_name=None,
-    parking_location=None,
-    start_time=None,
-    end_time=None
+    customer_name,
+    parking_location,
+    start_time,
+    end_time
 ):
     """
     Validate which reservation(s) can be canceled.
@@ -142,16 +142,16 @@ def validate_cancel_reservation_interactive(
     Parameters:
         conn: Database connection.
         car_number (str): Car identifier.
-        customer_name (str): Optional customer name.
-        parking_location (str): Optional location.
-        start_time: Optional start time.
-        end_time: Optional end time.
+        customer_name (str): customer name.
+        parking_location (str): parking location.
+        start_time: start time.
+        end_time: end time.
 
     Returns:
         dict: Matching reservation IDs or multiple options.
     """
     # -------- FETCH RESERVATIONS USING EXISTING FUNCTION --------
-    reservations_result = get_reservations_by_specifics(conn,car_number=car_number)
+    reservations_result = get_reservations_by_specifics(conn,car_number=car_number,customer_name=customer_name,parking_location=parking_location,start_time=start_time,end_time=end_time)
 
     if reservations_result["status"] != "success":
         # No reservations found
@@ -175,9 +175,6 @@ def validate_cancel_reservation_interactive(
         if match:
             filtered.append(r)
             ids.append(r["id"])
-
-    cursor = conn.cursor()
-
     # -------- PERFECT MATCH → DELETE --------
     if filtered:
         return {
@@ -244,3 +241,87 @@ def cancel_reservation_interactive(
             "message": f"{len(ids)} reservation(s) cancelled for car {car_number}."
         }
 
+def validate_modify_parking_reservation(conn,car_number,customer_name,parking_location,start_time,end_time,new_customer_name,new_location,new_start_time,new_end_time):
+
+    # -------- FETCH RESERVATIONS USING EXISTING FUNCTION --------
+    reservations_result = get_reservations_by_specifics(conn, car_number=car_number)
+
+    if reservations_result["status"] != "success":
+        # No reservations found
+        return reservations_result
+
+    all_reservations = reservations_result["reservations"]
+
+    # -------- FILTER MATCHES --------
+    filtered = []
+    ids = []
+    for r in all_reservations:
+        match = True
+        if customer_name and r["customer_name"] != customer_name:
+            match = False
+        if parking_location and r["location"] != parking_location:
+            match = False
+        if start_time and r["start_time"] != start_time:
+            match = False
+        if end_time and r["end_time"] != end_time:
+            match = False
+        if match:
+            filtered.append(r)
+            ids.append(r["id"])
+    cursor=conn.cursor()
+    print(ids)
+    print(filtered)
+    print(new_location)
+
+    # -------- PERFECT MATCH → MODIFY --------
+    if filtered:
+
+        # Execute the query safely
+        cursor.execute("SELECT id FROM parking_spaces WHERE location = ?", (new_location,))
+        row = cursor.fetchone()
+        new_parking_id = row[0]
+        print(new_parking_id)
+        return {"status": "success",
+                "customer_name": customer_name,
+                "car_number": car_number,
+                "parking_location": parking_location,
+                "start_time": start_time,
+                "end_time": end_time,
+                "new_customer_name": new_customer_name,
+                "new_parking_location": new_location,
+                "new_parking_id": new_parking_id,
+                "new_start_time": new_start_time,
+                "new_end_time": new_end_time,
+                "ids": ids}
+
+    # -------- MULTIPLE OPTIONS --------
+    options = []
+    for r in all_reservations:
+        options.append({
+            "customer_name": r["customer_name"],
+            "location": r["location"],
+            "start_time": r["start_time"],
+            "end_time": r["end_time"]
+        })
+
+    return {
+        "status": "error",
+        "message": "Multiple reservations found. Please specify which one to cancel.",
+        "reservations": options
+    }
+
+
+def modify_parking_reservation(conn,car_number,customer_name,parking_location,start_time,end_time,new_customer_name,new_parking_location,new_start_time,new_end_time, new_parking_id,ids):
+    print("Modifying reservations with IDs:", ids)
+    cursor = conn.cursor()
+    for id1 in ids:
+        cursor.execute(
+            "UPDATE reservations SET customer_name=?,start_time=?,end_time=?,parking_id=? WHERE id = ?",
+            (new_customer_name,new_start_time,new_end_time,new_parking_id,id1,)  # Note: use actual reservation ID
+        )
+
+    conn.commit()
+    return {
+        "status": "success",
+        "message": f"{len(ids)} reservation(s) updated for car {car_number}."
+    }

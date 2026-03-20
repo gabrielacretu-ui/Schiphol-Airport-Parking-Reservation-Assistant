@@ -176,12 +176,13 @@ def check_existing_reservation_tool(
     Returns:
         dict: Matching reservations or an error message if validation fails.
     """
-    if not any([car_number, customer_name, start_time, end_time, parking_location]):
+    if all(f is None for f in [car_number, customer_name, start_time, end_time, parking_location]):
         return {
             "status": "error",
             "message": "No fields found",
             "reservations": []
         }
+    print(customer_name)
     if start_time:
         start_time = start_time.strftime("%Y-%m-%d %H:%M")
     if end_time:
@@ -209,7 +210,7 @@ def check_existing_reservation_tool(
             car_number = validated_car
 
             # Validate optional fields
-            if parking_location:
+        if parking_location:
                 validated_location = validate(conn, parking_location, "location", "parking_spaces")
                 if not validated_location:
                     # No match: suggest available locations
@@ -231,20 +232,23 @@ def check_existing_reservation_tool(
                     }
                 parking_location = validated_location
 
-            if customer_name:
+        if customer_name:
                 customer_name = standardize_dutch_name(customer_name)
+                print(customer_name)
                 validated_name = validate(conn, customer_name, "customer_name", "reservations")
+                print(validated_name)
                 if not validated_name:
                     return {
                         "status": "error",
                         "message": f"Customer name '{customer_name}' not found.",
                     }
+
                 elif validated_name.lower() != customer_name.lower():
                     return {
                         "status": "error",
                         "message": f"Just to confirm did you mean '{validated_name}'?",
                     }
-                customer_name = validated_name
+                customer_name=validated_name
         return get_reservations_by_specifics(
             conn,
             car_number=car_number,

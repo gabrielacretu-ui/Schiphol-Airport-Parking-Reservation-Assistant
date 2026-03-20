@@ -167,7 +167,7 @@ def get_reservations_by_specifics(conn, car_number: str = None, customer_name: s
     Returns:
         dict: Matching reservations or error if none found.
     """
-    if not any([car_number, customer_name, start_time, end_time, parking_location]):
+    if all(f is None for f in [car_number, customer_name, start_time, end_time, parking_location]):
         return {
             "status": "error",
             "message": "No fields found",
@@ -194,6 +194,7 @@ def get_reservations_by_specifics(conn, car_number: str = None, customer_name: s
     # Build dynamic WHERE conditions
     conditions = []
     params = []
+    print(customer_name)
 
     if car_number:
         conditions.append("r.car_number = ?")
@@ -210,6 +211,7 @@ def get_reservations_by_specifics(conn, car_number: str = None, customer_name: s
     if parking_location:
         conditions.append("ps.location = ?")
         params.append(parking_location)
+    print(params)
 
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -301,7 +303,7 @@ def check_car_overlap(conn, operation, car_number, start_time=None, end_time=Non
         car_number (str): Car identifier.
         start_time: Start time.
         end_time: End time.
-        ids (list): Reservation IDs to exclude (for modifying).
+        ids (list): Reservation IDs to exclude (for modifying ).
 
     Returns:
         dict: Success if no overlap, otherwise error with explanation.
@@ -332,6 +334,7 @@ def check_car_overlap(conn, operation, car_number, start_time=None, end_time=Non
         conflict = cur.fetchone()
 
     elif operation == "modifying":
+        print(operation)
 
         if ids:
             placeholders = ",".join(["?"] * len(ids))

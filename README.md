@@ -106,7 +106,7 @@ These scripts initialize:
 ## 3. Start the FastAPI Logging Server
 Before doing this please kill all actions on that port if you have any.
 ```bash
-python -m uvicorn app.MCP_SERVER:app --port 8001
+python -m uvicorn app.MCP_SERVER:app --port 8000
 ```
 
 This server:
