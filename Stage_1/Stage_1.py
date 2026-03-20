@@ -9,13 +9,13 @@ from INITIALIZATION_sqlite_db import get_sqlite_connection
 from tools.TOOLS_sqlite_READ import check_availability_tool, check_existing_reservation_tool, \
     get_parking_locations_tool, estimate_parking_price_tool, get_parking_information_tool
 from tools.TOOLS_sqlite_WRITE import validate_reservation_tool, validate_cancellation_tool
-
+from tools.TOOLS_weaviate import search_parking_information_tool
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
 chatbot_tools = [check_availability_tool,check_existing_reservation_tool, get_parking_locations_tool,
-                 estimate_parking_price_tool,get_parking_information_tool, validate_cancellation_tool,validate_reservation_tool] #search_parking_information_wrapper ]
+                 estimate_parking_price_tool,get_parking_information_tool, validate_cancellation_tool,validate_reservation_tool,search_parking_information_tool ]
 
 chatbot_memory = ConversationBufferMemory(
         memory_key="chat_history",
@@ -75,7 +75,6 @@ def run_interactive():
         print(f"Agent: {output}")
 
 def run_automated_chatbot(questions):
-    print("=== Automated Parking Reservation Chatbot Test ===")
     """
         Run an automated test of the chatbot with a predefined list of questions.
 
@@ -90,6 +89,8 @@ def run_automated_chatbot(questions):
         - Sends the input to the chatbot agent for processing.
         - Prints the agent's responses.
         """
+    print("=== Automated Parking Reservation Chatbot Test ===")
+
 
 
     conn = get_sqlite_connection()

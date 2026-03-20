@@ -15,12 +15,12 @@ from tools.TOOLS_human_agent import check_reservation_length_tool, check_car_res
 from tools.TOOLS_sqlite_READ import check_availability_tool, check_existing_reservation_tool, \
     get_parking_locations_tool, get_parking_information_tool
 from tools.TOOLS_sqlite_WRITE import validate_reservation_tool, validate_cancellation_tool
-
+from tools.TOOLS_weaviate import search_parking_information_tool
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
-chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_reservation_tool,get_parking_information_tool, validate_cancellation_tool]
+chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_reservation_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool]
 admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool]
 
 shared_memory = ConversationBufferMemory(
