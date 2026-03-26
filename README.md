@@ -314,15 +314,3 @@ EPAM Systems
 
 Contact:
 [gabriela_cretu@epam.com](mailto:gabriela_cretu@epam.com)
-
----
-
-If you want, I can also make a **much stronger GitHub README (like senior engineers do)** by adding:
-
-* **Architecture diagram**
-* **Agent interaction flow**
-* **Example chatbot conversation**
-* **Example API logging request**
-* **Better repo badges**
-
-It would make the repo look **significantly more professional for EPAM reviewers**.
