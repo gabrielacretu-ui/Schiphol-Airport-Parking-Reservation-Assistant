@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schiphol-parking"
+version = "1.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "python-dotenv",
+    "requests",
+    "openai",
+    "langchain",
+    "langchain-core",
+    "langchain-openai",
+    "langchain-community",
+    "langchain-text-splitters",
+    "langchain-classic",
+    "langgraph",
+    "weaviate-client",
+    "fastapi",
+    "uvicorn",
+    "mcp",
+    "tqdm",
+    "joblib",
+    "pypdf",
+    "presidio-analyzer",
+    "presidio-anonymizer",
+    "vehicle",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
