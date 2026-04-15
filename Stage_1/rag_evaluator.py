@@ -3,7 +3,7 @@ import time
 from typing import List, Dict
 from dataclasses import dataclass
 
-from tools.TOOLS_weaviate import search_parking_information_tool_eval
+from parking.tools import search_parking_information_tool_eval
 
 
 # ---------------------------------------------------
@@ -148,7 +148,7 @@ def retrieve(query: str, k: int = 6):
 
 
 # ---------------------------------------------------
-# RECALL@K (keyword-based, adapted to your system)
+# RECALL@K
 # ---------------------------------------------------
 def compute_recall(retrieved_text: str, expected_keywords: List[str]) -> float:
     if not expected_keywords:
@@ -163,7 +163,7 @@ def compute_recall(retrieved_text: str, expected_keywords: List[str]) -> float:
 
 
 # ---------------------------------------------------
-# PRECISION@K (approximation for your string-based RAG)
+# PRECISION@K
 # ---------------------------------------------------
 def compute_precision(retrieved_text: str, expected_section: str) -> float:
     if not retrieved_text:
