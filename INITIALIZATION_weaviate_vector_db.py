@@ -66,7 +66,7 @@ def vectorizer_configuration(name: str = "vector", source_properties: List[str] 
 def collection_query(
                      name: str = 'static_parking_info_collection',
                      source_properties: List[str] = None,
-                     force_recreate: bool = True):
+                     force_recreate: bool = False):
     """
         Create or retrieve a Weaviate collection.
 
@@ -145,7 +145,7 @@ def insert_elements(
                     joblib_path: str = "parking_static_data.joblib",
                     chunk_size: int = 500,
                     chunk_overlap: int = 100,
-                    force_recreate_collection: bool = True):
+                    force_recreate_collection: bool = False):
     """
         Insert chunked documents into a Weaviate collection.
 

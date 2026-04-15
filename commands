@@ -1,0 +1,10 @@
+docker-compose down -v --remove-orphans
+#docker system prune -a -f
+docker volume prune -f
+
+# Delete local data
+Remove-Item -Recurse -Force .\collections -ErrorAction SilentlyContinue
+Remove-Item -Force .\parking_static_data.joblib -ErrorAction SilentlyContinue
+
+docker-compose up -d
+python INITIALIZATION_weaviate_vector_db.py

@@ -40,3 +40,13 @@ def search_parking_information_tool(query: str):
         return "\n".join(docs)
 
     return "Sorry, I could not find information about that."
+
+def search_parking_information_tool_eval(query: str, fetch_k: int = 10):
+    results = search_collection(query)
+
+    docs = [
+        obj.properties["content"]
+        for obj in results.objects[:fetch_k]
+    ]
+
+    return docs

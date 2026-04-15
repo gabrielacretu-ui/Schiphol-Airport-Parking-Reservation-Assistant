@@ -11,17 +11,18 @@ from app.AGENT_CHATBOT import agent_chatbot
 from app.GUARD_RAILS import sanitize_input_nl
 from functions.FUNCTION_helpers_READ_tools import auto_release_expired_reservations
 from INITIALIZATION_sqlite_db import get_sqlite_connection
-from tools.TOOLS_human_agent import check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_tool
+from tools.TOOLS_human_agent import check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_creation_tool
 from tools.TOOLS_sqlite_READ import check_availability_tool, check_existing_reservation_tool, \
-    get_parking_locations_tool, get_parking_information_tool
-from tools.TOOLS_sqlite_WRITE import validate_reservation_tool, validate_cancellation_tool
+    get_parking_locations_tool, get_parking_information_tool, estimate_parking_price_tool
+from tools.TOOLS_sqlite_WRITE import validate_make_reservation_tool, validate_cancellation_tool,  validate_modification_tool
 from tools.TOOLS_weaviate import search_parking_information_tool
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
-chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_reservation_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool]
-admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_tool]
+chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_make_reservation_tool,validate_modification_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool,estimate_parking_price_tool]
+admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_creation_tool]
+
 
 shared_memory = ConversationBufferMemory(
     memory_key="chat_history",

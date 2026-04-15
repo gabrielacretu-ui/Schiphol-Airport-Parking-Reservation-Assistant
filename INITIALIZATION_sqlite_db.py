@@ -28,7 +28,7 @@ def get_sqlite_connection(db_path=r"C:\Users\GabrielaCretu\Desktop\EPAM Onboardi
 # ---------------------------------------------------
 # Step 2: Initialize database tables
 # ---------------------------------------------------
-def initialize_db():
+def initialize_db(conn):
     """
         Initialize the SQLite database tables for parking and reservations.
 
@@ -36,7 +36,6 @@ def initialize_db():
         - Creates 'reservations' table if it doesn't exist.
         - Populates tables with initial seed data.
         """
-    conn=get_sqlite_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -250,6 +249,6 @@ def seed_reservations(conn):
         insert_row(conn, "reservations", reservation)
 
 
-if __name__=="__main__":
-    conn=get_sqlite_connection()
-    seed_reservations(conn)
+if __name__ == "__main__":
+    conn = get_sqlite_connection()
+    initialize_db(conn)

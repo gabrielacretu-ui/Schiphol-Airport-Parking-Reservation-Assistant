@@ -11,7 +11,7 @@ from INITIALIZATION_sqlite_db import get_sqlite_connection
 from datetime import datetime
 
 @tool
-def validate_reservation_tool(car_number:str,customer_name:str,parking_location:str,start_time:datetime,end_time:datetime) -> dict:
+def validate_make_reservation_tool(car_number:str,customer_name:str,parking_location:str,start_time:datetime,end_time:datetime) -> dict:
     """
     Validate a new parking reservation before admin approval.
 
@@ -192,7 +192,7 @@ def validate_cancellation_tool(car_number: str,
             conn,
             car_number=reservations.get("car_number"),
             customer_name=reservations.get("customer_name"),
-            parking_location=reservations.get("parking_location"),
+            parking_location=reservations.get("location"),
             start_time=reservations.get("start_time"),
             end_time=reservations.get("end_time"),
         )

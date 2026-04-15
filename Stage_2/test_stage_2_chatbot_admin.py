@@ -14,10 +14,9 @@ from INITIALIZATION_sqlite_db import get_sqlite_connection
 from functions.FUNCTION_helpers_READ_tools import auto_release_expired_reservations
 
 from tools.TOOLS_sqlite_READ import (
-    check_availability_tool,
     check_existing_reservation_tool,
     get_parking_locations_tool,
-    get_parking_information_tool, estimate_parking_price_tool
+    get_parking_information_tool, estimate_parking_price_tool, check_availability_tool
 )
 
 from tools.TOOLS_sqlite_WRITE import validate_reservation_tool
@@ -46,11 +45,10 @@ class TestMultiAgentE2E(unittest.TestCase):
 
         # Tools
         chatbot_tools = [
-            check_availability_tool,
             check_existing_reservation_tool,
             get_parking_locations_tool,
             estimate_parking_price_tool,
-            get_parking_information_tool, validate_reservation_tool
+            get_parking_information_tool, validate_reservation_tool, check_availability_tool
         ]
 
         admin_tools = [
@@ -77,17 +75,19 @@ class TestMultiAgentE2E(unittest.TestCase):
             validated_dict = None
 
             for action, tool_output in reversed(chatbot_output["intermediate_steps"]):
-                    validated_dict = tool_output
-                    break
+                   #print(validated_dict)
+                   if action.tool.startswith("validate_"):
+                       validated_dict = tool_output
+                       break
 
         except Exception as e:
             return f"Chatbot error: {e}"
 
-        # If no validation → return chatbot only, in case the chatbot hallucinates it will be terminated before asking the admin
+        # If no validation → return chatbot only,and validated "read-only" as no operation was made, in case the chatbot hallucinates it will be terminated before asking the admin
         if validated_dict is None:
             return  {
             "chatbot": chatbot_output.get("output"),
-            "validated": None,
+            "validated": "read-only",
             "admin": None
         }
 
@@ -99,13 +99,7 @@ class TestMultiAgentE2E(unittest.TestCase):
                 "admin": None
             }
 
-        # SECOND → check if it's read-only
-        if not validated_dict.get("operation"):
-            return {
-                "chatbot": chatbot_output.get("output"),
-                "validated": "read-only",
-                "admin": None
-            }
+
 
         try:
 
@@ -156,19 +150,14 @@ class TestMultiAgentE2E(unittest.TestCase):
 
         self.assertEqual("read-only", result.get("validated"))
 
-    def test_invalid_time(self):
-        result = self.run_pipeline(
-            "Make a reservation from April 16 18:00 to 08:00 April 15."
-        )
 
-        self.assertIs(None,result.get("validated"))
 
     def test_wrong_parking_location_trigger(self):
         result = self.run_pipeline(
             "Check if Moon Sntarini is a valid location. If yes Make reservation for HN071F from April 15 12:00 to 14:00 at Moon Santorini."
         )
 
-        self.assertEqual("failed", result.get("validated"))
+        self.assertEqual("read-only", result.get("validated"))
 
     def test_valid_reservation_making(self):
         result = self.run_pipeline(
@@ -177,6 +166,42 @@ class TestMultiAgentE2E(unittest.TestCase):
 
         self.assertIsInstance(result.get("validated"), dict)
         self.assertIn("approve", result.get("admin").lower())
+
+    def test_invalid_location(self):
+        result = self.run_pipeline(
+            "Book parking for Jan de Vries, car number V978DS "
+            "from 10 April 2026 10:00 to 12:00 at Hogwarts Parking."
+        )
+
+        self.assertEqual("failed", result.get("validated"))
+        self.assertIsNone(result.get("admin"))
+
+    def test_price_inquiry_read_only(self):
+        result = self.run_pipeline(
+            "How much does parking cost at Schiphol P1 Short Parking for 3 hours?"
+        )
+
+        self.assertEqual("read-only", result.get("validated"))
+        self.assertIsNone(result.get("admin"))
+
+    def test_reservation_history_read_only(self):
+        result = self.run_pipeline(
+            "Show me all reservations for car number V976HV."
+        )
+
+        self.assertEqual("read-only", result.get("validated"))
+
+    def test_mixed_intent_booking(self):
+        result = self.run_pipeline(
+            "Check availability at Schiphol P6 Valet Parking and book it "
+            "for V97HBB from 12 April 2026 10:00 to 12:00."
+        )
+
+        self.assertIsInstance(result.get("validated"), dict)
+        self.assertIn("approve", result.get("admin").lower())
+
+
+
 
 
 

@@ -8,14 +8,13 @@ from functions.FUNCTION_helpers_READ_tools import auto_release_expired_reservati
 from INITIALIZATION_sqlite_db import get_sqlite_connection
 from tools.TOOLS_sqlite_READ import check_availability_tool, check_existing_reservation_tool, \
     get_parking_locations_tool, estimate_parking_price_tool, get_parking_information_tool
-from tools.TOOLS_sqlite_WRITE import validate_reservation_tool, validate_cancellation_tool
+from tools.TOOLS_sqlite_WRITE import validate_make_reservation_tool, validate_cancellation_tool, validate_modification_tool
 from tools.TOOLS_weaviate import search_parking_information_tool
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
-chatbot_tools = [check_availability_tool,check_existing_reservation_tool, get_parking_locations_tool,
-                 estimate_parking_price_tool,get_parking_information_tool, validate_cancellation_tool,validate_reservation_tool,search_parking_information_tool ]
+chatbot_tools = [search_parking_information_tool,validate_make_reservation_tool,validate_cancellation_tool,validate_modification_tool,check_availability_tool,check_existing_reservation_tool,get_parking_information_tool,get_parking_locations_tool,estimate_parking_price_tool]
 
 chatbot_memory = ConversationBufferMemory(
         memory_key="chat_history",
@@ -120,7 +119,6 @@ def run_automated_chatbot(questions):
 if __name__ == "__main__":
     conn = get_sqlite_connection()
     auto_release_expired_reservations(conn)
-    run_interactive()
     tests=[
     # 1. Check Existing Reservation - Normal Usage
     "Does car 6XTN75 have a reservation?",
@@ -196,4 +194,6 @@ if __name__ == "__main__":
     "Check 65MTNF reservation.",
     "Check 6XTN57 reservation vs 6XTN75.",  # similar plates
     "Check 123ABC reservation.",  # invalid plate
+
 ]
+    run_interactive()

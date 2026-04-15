@@ -9,21 +9,22 @@ from langchain_classic.memory import ConversationBufferMemory
 from app.AGENT_ADMIN import agent_admin
 from app.AGENT_CHATBOT import agent_chatbot
 from app.GUARD_RAILS import sanitize_input_nl
+from app.MCP_server_calling import route_and_execute_mcp_tool
 from functions.FUNCTION_helpers_READ_tools import auto_release_expired_reservations
 from INITIALIZATION_sqlite_db import get_sqlite_connection
-from app.MCP_SERVER_calling import save_reservation_to_mcp_server
 from tools.TOOLS_human_agent import check_reservation_length_tool, check_car_reservation_history_tool, \
-    check_advance_booking_tool, check_available_slots_tool
+    check_advance_booking_tool, check_available_slots_creation_tool
 from tools.TOOLS_sqlite_READ import check_availability_tool, check_existing_reservation_tool, \
     get_parking_locations_tool, get_parking_information_tool
-from tools.TOOLS_sqlite_WRITE import validate_reservation_tool, validate_cancellation_tool
+from tools.TOOLS_sqlite_WRITE import validate_make_reservation_tool, validate_cancellation_tool, validate_modification_tool
 from tools.TOOLS_weaviate import search_parking_information_tool
+
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
-chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_reservation_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool]
-admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_tool()]
+chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_make_reservation_tool,validate_modification_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool]
+admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_creation_tool]
 
 shared_memory = ConversationBufferMemory(
     memory_key="chat_history",
@@ -132,7 +133,7 @@ def run_interactive():
         if not is_approved(admin_result):
             print(f"Admin:{admin_result}")
             continue
-        save_reservation_to_mcp_server(validated_dict)
+        route_and_execute_mcp_tool(validated_dict)
         print("The reservation operation has been saved in the MCP server as a new log entry and in the database for fast access.")
 
 

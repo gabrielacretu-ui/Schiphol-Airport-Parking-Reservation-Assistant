@@ -72,3 +72,5 @@ langgraph-prebuilt
 pypdf
 
 vehicle
+
+mcp
