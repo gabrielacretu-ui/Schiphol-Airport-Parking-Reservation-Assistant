@@ -27,6 +27,7 @@ LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 # In-memory JSON storage
 confirmed_reservations = []
 
+
 # -------------------------------
 # Health check
 # -------------------------------

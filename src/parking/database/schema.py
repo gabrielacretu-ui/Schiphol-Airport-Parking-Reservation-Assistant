@@ -29,6 +29,15 @@ def create_tables(conn: sqlite3.Connection) -> None:
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pending_approvals (
+            token       TEXT PRIMARY KEY,
+            data        TEXT NOT NULL,
+            decision    TEXT DEFAULT NULL,
+            created_at  TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
 
     cursor.execute("SELECT COUNT(*) FROM parking_spaces")

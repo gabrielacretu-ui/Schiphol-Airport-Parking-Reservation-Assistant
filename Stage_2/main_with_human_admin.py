@@ -6,30 +6,33 @@ from datetime import datetime
 
 from langchain_classic.memory import ConversationBufferMemory
 
-from parking.agents import agent_admin
 from parking.agents import agent_chatbot
-from parking.services import sanitize_input_nl
-from parking.services import auto_release_expired_reservations
+from parking.services import sanitize_input_nl, auto_release_expired_reservations
+from parking.services import send_approval_email, wait_for_decision
 from parking.database import get_connection
-from parking.tools import check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_creation_tool
-from parking.tools import check_availability_tool, check_existing_reservation_tool, \
-    get_parking_locations_tool, get_parking_information_tool, estimate_parking_price_tool
-from parking.tools import validate_make_reservation_tool, validate_cancellation_tool, validate_modification_tool
-from parking.tools import search_parking_information_tool
+from parking.tools import (
+    check_availability_tool, check_existing_reservation_tool,
+    get_parking_locations_tool, get_parking_information_tool, estimate_parking_price_tool,
+    validate_make_reservation_tool, validate_cancellation_tool, validate_modification_tool,
+    search_parking_information_tool,
+)
 
 # ---------------------------------------------------
 # LLM & Agents
 # ---------------------------------------------------
-chatbot_tools=[check_availability_tool, check_existing_reservation_tool,get_parking_locations_tool,validate_make_reservation_tool,validate_modification_tool,get_parking_information_tool, validate_cancellation_tool, search_parking_information_tool,estimate_parking_price_tool]
-admin_tools=[check_reservation_length_tool, check_car_reservation_history_tool, check_advance_booking_tool, check_available_slots_creation_tool]
-
+chatbot_tools = [
+    check_availability_tool, check_existing_reservation_tool,
+    get_parking_locations_tool, validate_make_reservation_tool,
+    validate_modification_tool, get_parking_information_tool,
+    validate_cancellation_tool, search_parking_information_tool,
+    estimate_parking_price_tool,
+]
 
 shared_memory = ConversationBufferMemory(
     memory_key="chat_history",
     return_messages=True
 )
 chatbot_executor = agent_chatbot(chatbot_tools, shared_memory)
-admin_executor = agent_admin(admin_tools, shared_memory)
 # ---------------------------------------------------
 # Interactive loop: Chatbot + Admin interaction
 # ---------------------------------------------------
@@ -105,25 +108,21 @@ def run_interactive():
             continue
 
         # -----------------------------
-        # Step 3: Admin review
+        # Step 3: Email human admin
         # -----------------------------
-        try:
-
-            admin_response = admin_executor.invoke({
-                "input": json.dumps(validated_dict)
-            })
-
-            admin_result = admin_response.get("output", {})
-
-        except Exception as e:
-            print(f"Admin error: {e}")
-            continue
+        print("Chatbot: Request sent to the administrator for approval. Waiting...")
+        token = send_approval_email(validated_dict)
 
         # -----------------------------
-        # Step 4: Final decision
+        # Step 4: Wait for decision
         # -----------------------------
-
-        print(f"Admin:{admin_result}")
+        decision = wait_for_decision(token)
+        if decision == "approved":
+            print("Admin: APPROVED — reservation will be processed.")
+        elif decision == "rejected":
+            print("Admin: REJECTED — reservation has been declined.")
+        else:
+            print("Admin: No response received within the allowed time. Request expired.")
 
 def run_automated_test(questions: list):
     """
@@ -190,25 +189,21 @@ def run_automated_test(questions: list):
             print(f"Chatbot:{output.get('output')}")
 
         # -----------------------------
-        # Step 3: Admin review
+        # Step 3: Email human admin
         # -----------------------------
-        try:
-
-            admin_response = admin_executor.invoke({
-                "input": json.dumps(validated_dict)
-            })
-
-            admin_result = admin_response.get("output", {})
-
-        except Exception as e:
-            print(f"Admin error: {e}")
-            continue
+        print("Chatbot: Request sent to the administrator for approval. Waiting...")
+        token = send_approval_email(validated_dict)
 
         # -----------------------------
-        # Step 4: Final decision
+        # Step 4: Wait for decision
         # -----------------------------
-
-        print(f"Admin:{admin_result}")
+        decision = wait_for_decision(token)
+        if decision == "approved":
+            print("Admin: APPROVED — reservation will be processed.")
+        elif decision == "rejected":
+            print("Admin: REJECTED — reservation has been declined.")
+        else:
+            print("Admin: No response received within the allowed time. Request expired.")
 
     print("\n=== Automated Test Completed ===")
 if __name__ == "__main__":

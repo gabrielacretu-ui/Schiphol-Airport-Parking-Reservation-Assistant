@@ -2,7 +2,7 @@ from datetime import datetime
 
 from langchain_core.messages import HumanMessage
 
-from parking.pipeline import build_graph, ParkingState
+from parking.pipeline.graph_with_human_admin import build_graph, ParkingState
 from parking.services import sanitize_input_nl
 from parking.services import auto_release_expired_reservations
 from parking.database import get_connection

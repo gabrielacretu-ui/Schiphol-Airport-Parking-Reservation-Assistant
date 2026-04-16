@@ -66,6 +66,12 @@ FASTAPI_KEY=<any_secret_string>
 MCP_SERVER_URL=http://127.0.0.1:8000
 WEAVIATE_URL=http://localhost:8180
 
+# Human-in-the-loop approval server (used by main_with_human_admin variants)
+APPROVAL_SERVER_URL=http://127.0.0.1:8001
+ADMIN_EMAIL=admin@schiphol.nl
+SMTP_HOST=localhost
+SMTP_PORT=1025
+
 # Optional overrides
 DB_PATH=dynamic_parking.db
 LLM_MODEL=gpt-4o-mini
@@ -80,6 +86,11 @@ Run this before a fresh setup to tear down all containers, volumes, and generate
 ```powershell
 # Kill anything running on port 8000 (FastAPI logging server)
 $proc = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty OwningProcess
+if ($proc) { Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue }
+
+# Kill anything running on port 8001 (FastAPI approval server)
+$proc = Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue |
         Select-Object -ExpandProperty OwningProcess
 if ($proc) { Stop-Process -Id $proc -Force -ErrorAction SilentlyContinue }
 
@@ -141,6 +152,26 @@ The server exposes:
 
 Interactive docs: `http://127.0.0.1:8000/docs`
 
+### 4. Start the human-in-the-loop approval server
+
+Required only when running the `*_with_human_admin` variants of Stage 2, 3, and 4.
+
+```bash
+python -m uvicorn parking.approval.api:app --port 8001
+```
+
+The server exposes:
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/` | GET | Health check |
+| `/approve/{token}` | GET | Admin clicks to approve a pending reservation |
+| `/reject/{token}` | GET | Admin clicks to reject a pending reservation |
+
+When a reservation is validated by the chatbot, an email is sent to `ADMIN_EMAIL` containing clickable approve/reject links. If no SMTP server is available locally, the links are printed to the terminal instead. The chatbot blocks and polls the database every 5 seconds until the admin clicks a link or the 10-minute timeout is reached.
+
+Interactive docs: `http://127.0.0.1:8001/docs`
+
 ---
 
 ## Running the Stages
@@ -172,11 +203,19 @@ python -m Stage_1.rag_evaluator
 Introduces the admin agent. After the chatbot validates a reservation action, the admin agent runs its own tool checks (reservation history, advance-booking limit, duration limits) and issues an APPROVE or REJECT decision.
 
 ```bash
-python -m Stage_2.main
+python -m Stage_2.main_with_agent_admin
 ```
 
 ```bash
 python -m unittest Stage_2.tests
+```
+
+**Human-in-the-loop variant** — replaces the LLM admin with a real human who receives an email and clicks Approve/Reject:
+
+> Requires the approval server to be running (Step 4 above).
+
+```bash
+python -m Stage_2.main_with_human_admin
 ```
 
 ### Stage 3 — MCP Logging Integration
@@ -186,7 +225,15 @@ Adds the MCP server layer. Approved operations are routed through the FastMCP su
 > Requires the FastAPI server to be running (Step 3 above).
 
 ```bash
-python -m Stage_3.main
+python -m Stage_3.main_with_agent_admin
+```
+
+**Human-in-the-loop variant:**
+
+> Requires both the FastAPI server (Step 3) and the approval server (Step 4).
+
+```bash
+python -m Stage_3.main_with_human_admin
 ```
 
 ### Stage 4 — LangGraph Pipeline
@@ -194,7 +241,15 @@ python -m Stage_3.main
 The complete system modelled as a compiled LangGraph state graph. All components from the previous stages are wired together into a single callable pipeline built by `build_graph()`.
 
 ```bash
-python -m Stage_4.main
+python -m Stage_4.main_with_agent_admin
+```
+
+**Human-in-the-loop variant** — uses `graph_with_human_admin.py` where the `human_admin_approval` node sends an email and blocks until the real admin decides:
+
+> Requires both the FastAPI server (Step 3) and the approval server (Step 4).
+
+```bash
+python -m Stage_4.main_with_human_admin
 ```
 
 ---
@@ -203,6 +258,8 @@ python -m Stage_4.main
 
 ### Agent workflow (Stage 4)
 
+**Standard (`main.py` / `graph.py`)** — LLM admin agent:
+
 ```
 User input
     └─► agent_chatbot_calling
@@ -210,14 +267,31 @@ User input
             ├─ (read-only query / validation failed) ──► END
             │
             └─ (reservation action validated as 'success')
-                    └─► admin_chatbot_calling
+                    └─► admin_chatbot_calling  (LLM reviews & decides)
                                 │
                                 ├─ (REJECT) ──► END
                                 │
                                 └─ (APPROVE)
-                                        └─► mcp_logging
-                                                │
-                                                └─► END
+                                        └─► mcp_logging ──► END
+```
+
+**Human-in-the-loop (`main_with_human_admin.py` / `graph_with_human_admin.py`)** — real human admin:
+
+```
+User input
+    └─► agent_chatbot_calling
+            │
+            ├─ (read-only query / validation failed) ──► END
+            │
+            └─ (reservation action validated as 'success')
+                    └─► human_admin_approval
+                            │  (email sent to admin with Approve/Reject links)
+                            │  (chatbot blocks, polls DB every 5s)
+                            │
+                            ├─ (rejected / timeout) ──► END
+                            │
+                            └─ (approved)
+                                    └─► mcp_logging ──► END
 ```
 
 ### MCP execution path
@@ -267,16 +341,20 @@ Schiphol-Airport-Parking-Reservation-Assistant/
 │       │   ├── seed.py             Sample parking spaces and reservations
 │       │   ├── vector.py           Weaviate client + collection management
 │       │   └── vector_seed.py      Seeds Weaviate with static PDF content
+│       ├── approval/
+│       │   └── api.py              FastAPI approval server (human-in-the-loop)
 │       ├── mcp/
 │       │   ├── server.py           FastMCP server (make/cancel/modify/list)
 │       │   ├── api.py              FastAPI logging server
 │       │   └── router.py           LLM-based MCP tool router (stdio client)
 │       ├── pipeline/
-│       │   └── graph.py            build_graph() — compiled LangGraph pipeline
+│       │   ├── graph_with_agent_admin.py            build_graph() — LLM admin pipeline
+│       │   └── graph_with_human_admin.py  build_graph() — human admin pipeline
 │       ├── services/
 │       │   ├── guard_rails.py      PII masking, plate validation, name standardisation
 │       │   ├── queries.py          DB query helpers (availability, reservations, …)
-│       │   └── reservation.py      Core make/cancel/modify business logic
+│       │   ├── reservation.py      Core make/cancel/modify business logic
+│       │   └── email.py            Approval email sender + decision poller
 │       ├── tools/
 │       │   ├── read.py             Chatbot read tools (availability, info, …)
 │       │   ├── write.py            Chatbot write tools (validate make/cancel/modify)
@@ -289,12 +367,15 @@ Schiphol-Airport-Parking-Reservation-Assistant/
 │   ├── tests.py     Automated chatbot tests
 │   └── rag_evaluator.py            RAG retrieval quality evaluation
 ├── Stage_2/
-│   ├── main.py                  Chatbot + admin agent loop
+│   ├── main_with_agent_admin.py                      Chatbot + LLM admin loop
+│   ├── main_with_human_admin.py     Chatbot + human admin (email approval)
 │   └── tests.py
 ├── Stage_3/
-│   └── main.py                  Adds MCP logging (imperative style)
+│   ├── main_with_agent_admin.py                      Adds MCP logging (imperative style)
+│   └── main_with_human_admin.py     MCP logging + human admin
 ├── Stage_4/
-│   └── main.py                  LangGraph pipeline entry point
+│   ├── main_with_agent_admin.py                      LangGraph pipeline entry point
+│   └── main_with_human_admin.py     LangGraph + human admin entry point
 │
 ├── scripts/
 │   ├── database_seeding.py         Initialise SQLite (creates tables + seeds data)

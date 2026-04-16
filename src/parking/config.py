@@ -24,7 +24,15 @@ if not FASTAPI_KEY:
 # Service URLs
 # -------------------------------------------------------
 MCP_SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8000")
+APPROVAL_SERVER_URL = os.getenv("APPROVAL_SERVER_URL", "http://127.0.0.1:8001")
 WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8180")
+
+# -------------------------------------------------------
+# Email / SMTP
+# -------------------------------------------------------
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@schiphol.nl")
+SMTP_HOST = os.getenv("SMTP_HOST", "localhost")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "1025"))
 
 # -------------------------------------------------------
 # LLM
