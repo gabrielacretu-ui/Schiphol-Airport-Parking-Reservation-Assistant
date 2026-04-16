@@ -152,13 +152,13 @@ Each stage is a self-contained script. The stages are incremental — each one b
 A standalone chatbot agent with conversation memory. Queries the SQLite database and Weaviate for information; validates and prepares reservation requests but does not write to the database.
 
 ```bash
-python -m Stage_1.Stage_1
+python -m Stage_1.main
 ```
 
 Run the automated test suite:
 
 ```bash
-python -m unittest Stage_1.test_stage_1_chatbot
+python -m unittest Stage_1.tests
 ```
 
 Run the RAG evaluator:
@@ -172,11 +172,11 @@ python -m Stage_1.rag_evaluator
 Introduces the admin agent. After the chatbot validates a reservation action, the admin agent runs its own tool checks (reservation history, advance-booking limit, duration limits) and issues an APPROVE or REJECT decision.
 
 ```bash
-python -m Stage_2.Stage_2
+python -m Stage_2.main
 ```
 
 ```bash
-python -m unittest Stage_2.test_stage_2_chatbot_admin
+python -m unittest Stage_2.tests
 ```
 
 ### Stage 3 — MCP Logging Integration
@@ -186,7 +186,7 @@ Adds the MCP server layer. Approved operations are routed through the FastMCP su
 > Requires the FastAPI server to be running (Step 3 above).
 
 ```bash
-python -m Stage_3.Stage_3
+python -m Stage_3.main
 ```
 
 ### Stage 4 — LangGraph Pipeline
@@ -194,7 +194,7 @@ python -m Stage_3.Stage_3
 The complete system modelled as a compiled LangGraph state graph. All components from the previous stages are wired together into a single callable pipeline built by `build_graph()`.
 
 ```bash
-python -m Stage_4.Stage_4
+python -m Stage_4.main
 ```
 
 ---
@@ -285,16 +285,16 @@ Schiphol-Airport-Parking-Reservation-Assistant/
 │       └── config.py               Centralised config from .env
 │
 ├── Stage_1/
-│   ├── Stage_1.py                  Chatbot-only interactive loop
-│   ├── test_stage_1_chatbot.py     Automated chatbot tests
+│   ├── main.py                  Chatbot-only interactive loop
+│   ├── tests.py     Automated chatbot tests
 │   └── rag_evaluator.py            RAG retrieval quality evaluation
 ├── Stage_2/
-│   ├── Stage_2.py                  Chatbot + admin agent loop
-│   └── test_stage_2_chatbot_admin.py
+│   ├── main.py                  Chatbot + admin agent loop
+│   └── tests.py
 ├── Stage_3/
-│   └── Stage_3.py                  Adds MCP logging (imperative style)
+│   └── main.py                  Adds MCP logging (imperative style)
 ├── Stage_4/
-│   └── Stage_4.py                  LangGraph pipeline entry point
+│   └── main.py                  LangGraph pipeline entry point
 │
 ├── scripts/
 │   ├── database_seeding.py         Initialise SQLite (creates tables + seeds data)

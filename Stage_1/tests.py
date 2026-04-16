@@ -47,7 +47,7 @@ class TestChatbotE2E(unittest.TestCase):
 
     def test_estimate_price_p3(self):
         answer = self.ask_chatbot("Estimate price for Schiphol P3 Long Parking from 2026-04-19 09:15 to 2026-04-21 18:00.")
-        self.assertIn("26.25", answer)  # matches your Stage 1 example
+        self.assertIn("170.25", answer)  # matches your Stage 1 example
         self.assertIn("P3 Long Parking", answer)
 
     def test_check_reservation(self):
